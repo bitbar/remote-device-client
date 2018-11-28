@@ -1,0 +1,10 @@
+# Build
+target/
+
+# IDE
+.vscode/
+.idea/
+!.idea/codeStyleSettings.xml
+
+# Logs
+remoteadb-debug.log
