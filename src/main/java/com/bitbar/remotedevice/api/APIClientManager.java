@@ -4,12 +4,12 @@ import com.bitbar.remotedevice.cli.CommandLineParameter;
 import com.bitbar.remotedevice.errors.RequiredParameterIsEmptyException;
 import com.testdroid.api.*;
 import com.testdroid.api.dto.Context;
+import com.testdroid.api.dto.MappingKey;
 import com.testdroid.api.dto.Operand;
 import com.testdroid.api.filter.FilterEntry;
 import com.testdroid.api.filter.NumberFilterEntry;
 import com.testdroid.api.filter.StringFilterEntry;
 import com.testdroid.api.model.*;
-import com.testdroid.dao.repository.dto.MappingKey;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
