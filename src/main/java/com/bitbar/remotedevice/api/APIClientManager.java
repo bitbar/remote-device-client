@@ -7,6 +7,7 @@ import com.testdroid.api.dto.Context;
 import com.testdroid.api.dto.MappingKey;
 import com.testdroid.api.dto.Operand;
 import com.testdroid.api.filter.FilterEntry;
+import com.testdroid.api.filter.ListStringFilterEntry;
 import com.testdroid.api.filter.NumberFilterEntry;
 import com.testdroid.api.filter.StringFilterEntry;
 import com.testdroid.api.model.*;
@@ -58,6 +59,8 @@ public class APIClientManager {
 
     public List<APIDevice> getSupportedDevices() throws APIException {
         Context<APIDevice> ctx = new Context<>(APIDevice.class);
+        ctx.getFilters().add(new ListStringFilterEntry(MappingKey.OS_TYPE, Operand.IN,
+                Arrays.asList(APIDevice.OsType.ANDROID.getDisplayName(), APIDevice.OsType.IOS.getDisplayName())));
         getRemoteSessionsLabelId().ifPresent(val ->
                 ctx.setExtraParams(Collections.singletonMap(MappingKey.LABEL_IDS_ARR, val)));
         ctx.setLimit(0);
