@@ -10,7 +10,7 @@
 
     <groupId>com.bitbar</groupId>
     <artifactId>remote-device-client</artifactId>
-    <version>0.3.3</version>
+    <version>0.3.4</version>
     <packaging>jar</packaging>
 
     <properties>
