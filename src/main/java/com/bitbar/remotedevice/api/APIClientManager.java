@@ -11,6 +11,8 @@ import com.testdroid.api.filter.ListStringFilterEntry;
 import com.testdroid.api.filter.NumberFilterEntry;
 import com.testdroid.api.filter.StringFilterEntry;
 import com.testdroid.api.model.*;
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
@@ -61,8 +63,11 @@ public class APIClientManager {
         Context<APIDevice> ctx = new Context<>(APIDevice.class);
         ctx.getFilters().add(new ListStringFilterEntry(MappingKey.OS_TYPE, Operand.IN,
                 Arrays.asList(APIDevice.OsType.ANDROID.getDisplayName(), APIDevice.OsType.IOS.getDisplayName())));
-        getRemoteSessionsLabelId().ifPresent(val ->
-                ctx.setExtraParams(Collections.singletonMap(MappingKey.LABEL_IDS_ARR, val)));
+        getRemoteSessionsLabelId().ifPresent(val -> {
+            MultiValuedMap<String, Object> map = new HashSetValuedHashMap<>();
+            map.put(MappingKey.LABEL_IDS_ARR, val);
+            ctx.setExtraParams(map);
+        });
         ctx.setLimit(0);
         List<APISort.SortItem> sortItems = new ArrayList<>();
         sortItems.add(new APISort.SortItem(MappingKey.DISPLAY_NAME, APISort.Type.ASC));
@@ -75,6 +80,9 @@ public class APIClientManager {
         List<FilterEntry> filters = ctx.getFilters();
         filters.add(new NumberFilterEntry(MappingKey.ID, Operand.EQ, id));
         APIList<APIDevice> devices = apiClient.getDevices(ctx).getEntity();
+        if (devices.isEmpty()) {
+            throw new APIException(String.format("Could not find device with id %d", id));
+        }
         return devices.get(0);
     }
 
