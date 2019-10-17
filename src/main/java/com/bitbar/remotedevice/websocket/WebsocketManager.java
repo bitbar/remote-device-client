@@ -10,10 +10,12 @@ import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.WebSocketClient;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
+import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -21,6 +23,7 @@ import java.util.concurrent.ExecutionException;
 import static com.bitbar.remotedevice.StaticParameters.WEBSOCKET_CONNECTIONS_TOPIC;
 import static com.bitbar.remotedevice.cli.CommandLineParameter.API_KEY;
 import static com.bitbar.remotedevice.cli.CommandLineParameter.CLOUD_URI;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 public class WebsocketManager {
 
@@ -29,6 +32,8 @@ public class WebsocketManager {
     private List<APIConnectionListener> apiConnectionListeners;
 
     private String websocketUrl;
+
+    private String apiKey;
 
     private TaskScheduler heartbeatScheduler;
 
@@ -40,7 +45,8 @@ public class WebsocketManager {
         }
         apiConnectionListeners = new LinkedList<>();
         heartbeatScheduler = createHeartbeatScheduler();
-        websocketUrl = WebsocketUrlBuilder.buildWebsocketUrl(cloudBEUrl, apiKey);
+        this.apiKey = apiKey;
+        websocketUrl = WebsocketUrlBuilder.buildWebsocketUrl(cloudBEUrl);
     }
 
     private TaskScheduler createHeartbeatScheduler() {
@@ -57,8 +63,9 @@ public class WebsocketManager {
         StompSessionHandler sessionHandler = new StompSessionHandler(this, WEBSOCKET_CONNECTIONS_TOPIC,
                 deviceSession.getId());
 
-        StompSession stompSession = stompClient.connect(websocketUrl, sessionHandler).get();
-        return stompSession;
+        WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();
+        webSocketHttpHeaders.add(AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString((apiKey + ":").getBytes()));
+        return stompClient.connect(websocketUrl, webSocketHttpHeaders, sessionHandler).get();
     }
 
     private WebSocketStompClient createStompClient() {

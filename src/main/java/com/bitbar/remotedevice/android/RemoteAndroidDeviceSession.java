@@ -34,7 +34,7 @@ public class RemoteAndroidDeviceSession extends RemoteDeviceSession {
                 adbPortForwarding = new ADBPortForwarding(jsch, connection.getHost(), connection.getPort());
                 adbPortForwarding.connect();
                 connected = true;
-            } catch (JSchException e) {
+            } catch (JSchException | InterruptedException e) {
                 LOGGER.error("Problem occurred while trying to forward ADB port", e);
                 stop();
             }
