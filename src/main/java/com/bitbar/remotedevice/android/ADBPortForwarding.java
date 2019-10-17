@@ -12,6 +12,12 @@ public class ADBPortForwarding {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ADBPortForwarding.class);
 
+    private static final String CONNECTION_RESET_MESSAGE = "SocketException: Connection reset";
+
+    private static final long CONNECTION_RETRY_DELAY = 1000;
+
+    private static final int MAX_CONNECTION_TRIES = 10;
+
     private Session daemonSession;
 
     ADBPortForwarding(JSch jsch, String daemonHost, Integer daemonPort) throws JSchException {
@@ -21,8 +27,21 @@ public class ADBPortForwarding {
         daemonSession.setPortForwardingL(LOCAL_PORT, REMOTE_ADB_HOST, REMOTE_FORWARDED_PORT);
     }
 
-    public void connect() throws JSchException {
-        daemonSession.connect();
+    public void connect() throws JSchException, InterruptedException {
+        int tries = 1;
+        while (!daemonSession.isConnected()) {
+            try {
+                daemonSession.connect();
+            } catch (JSchException e) {
+                if (tries < MAX_CONNECTION_TRIES && shouldBeRetried(e)) {
+                    Thread.sleep(CONNECTION_RETRY_DELAY);
+                    tries++;
+                } else {
+                    throw e;
+                }
+            }
+        }
+        LOGGER.debug("SSH tunnel connected after {} tries", tries);
         daemonSession.openChannel(CONNECTION_CHANNEL);
         if (daemonSession.isConnected()) {
             LOGGER.info("ADB forwarding has started");
@@ -41,4 +60,7 @@ public class ADBPortForwarding {
         }
     }
 
+    private boolean shouldBeRetried(JSchException exception) {
+        return exception.getMessage().contains(CONNECTION_RESET_MESSAGE);
+    }
 }
