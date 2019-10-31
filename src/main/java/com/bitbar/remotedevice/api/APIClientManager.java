@@ -11,12 +11,14 @@ import com.testdroid.api.filter.ListStringFilterEntry;
 import com.testdroid.api.filter.NumberFilterEntry;
 import com.testdroid.api.filter.StringFilterEntry;
 import com.testdroid.api.model.*;
+import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
 import static com.bitbar.remotedevice.StaticParameters.DEVICE_SESSIONS_URI;
 import static com.bitbar.remotedevice.StaticParameters.RELEASE_DS_URI;
+import static com.testdroid.api.dto.MappingKey.LABEL_IDS_ARR;
 
 public class APIClientManager {
 
@@ -61,8 +63,9 @@ public class APIClientManager {
         Context<APIDevice> ctx = new Context<>(APIDevice.class);
         ctx.getFilters().add(new ListStringFilterEntry(MappingKey.OS_TYPE, Operand.IN,
                 Arrays.asList(APIDevice.OsType.ANDROID.getDisplayName(), APIDevice.OsType.IOS.getDisplayName())));
-        getRemoteSessionsLabelId().ifPresent(val ->
-                ctx.setExtraParams(Collections.singletonMap(MappingKey.LABEL_IDS_ARR, val)));
+        getRemoteSessionsLabelId().ifPresent(val -> ctx.setExtraParams(
+                new HashSetValuedHashMap<>(Collections.singletonMap(LABEL_IDS_ARR, val))
+        ));
         ctx.setLimit(0);
         List<APISort.SortItem> sortItems = new ArrayList<>();
         sortItems.add(new APISort.SortItem(MappingKey.DISPLAY_NAME, APISort.Type.ASC));
