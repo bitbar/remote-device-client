@@ -78,6 +78,9 @@ public class APIClientManager {
         List<FilterEntry> filters = ctx.getFilters();
         filters.add(new NumberFilterEntry(MappingKey.ID, Operand.EQ, id));
         APIList<APIDevice> devices = apiClient.getDevices(ctx).getEntity();
+        if (devices.isEmpty()) {
+            throw new APIException(String.format("Could not find device with id %d", id));
+        }
         return devices.get(0);
     }
 
