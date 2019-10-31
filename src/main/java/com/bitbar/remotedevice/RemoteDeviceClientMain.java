@@ -1,5 +1,6 @@
 package com.bitbar.remotedevice;
 
+import com.bitbar.remotedevice.android.ADBVersionParser;
 import com.bitbar.remotedevice.android.PortForwardingParameters;
 import com.bitbar.remotedevice.android.RemoteAndroidDeviceSession;
 import com.bitbar.remotedevice.api.APIClientManager;
@@ -15,12 +16,15 @@ import com.testdroid.api.model.APIDeviceSession;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -46,6 +50,23 @@ public class RemoteDeviceClientMain {
     private static Thread keyboardInputThread;
 
     private static Object keyboardLock = new Object();
+
+    private static String ADB_VERSION;
+
+    static {
+        try {
+            ProcessBuilder ps = new ProcessBuilder("adb", "version");
+            Process process = ps.start();
+            String output = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8.name());
+            ADB_VERSION = new ADBVersionParser().parse(output);
+            process.waitFor();
+        } catch (IOException | InterruptedException exc) {
+            LOGGER.error("Error", exc);
+            System.exit(1);
+        } finally {
+            LOGGER.info(String.format("ADB version detected: %s", ADB_VERSION));
+        }
+    }
 
     private RemoteDeviceClientMain(CommandLine commandLine) throws RequiredParameterIsEmptyException, APIException {
         String cloudUrl = commandLine.getOptionValue(CommandLineParameter.CLOUD_URI.getArgument());
@@ -174,8 +195,7 @@ public class RemoteDeviceClientMain {
     private void checkPortFree(int port) throws PortNotFreeException {
         try (ServerSocket serverSocket = new ServerSocket()) {
             serverSocket.setReuseAddress(false);
-            serverSocket.bind(new InetSocketAddress(InetAddress.getByName("localhost"),
-                    port));
+            serverSocket.bind(new InetSocketAddress(InetAddress.getByName("localhost"), port));
         } catch (Exception e) {
             throw new PortNotFreeException();
         }
