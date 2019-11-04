@@ -52,7 +52,7 @@ public class APIClientManager {
         List<APILabelGroup> labelGroups = apiClient.getLabelGroups(ctx).getEntity().getData();
         if (labelGroups.size() > 0) {
             Context<APIDeviceProperty> lCtx = new Context<>(APIDeviceProperty.class);
-            lCtx.addFilter(new StringFilterEntry(MappingKey.NAME, Operand.EQ, "remote-session"));
+            lCtx.addFilter(new StringFilterEntry(MappingKey.NAME, Operand.EQ, "remote-adb"));
             result = labelGroups.get(0).getDevicePropertiesResource(lCtx).getEntity().getData()
                     .stream().findFirst().map(APIEntity::getId);
         }
