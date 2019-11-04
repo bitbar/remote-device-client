@@ -2,6 +2,7 @@ package com.bitbar.remotedevice.cli;
 
 public enum CommandLineParameter {
     API_KEY("apikey", true, "API key for cloud user authentication"),
+    ADB_VERSION("adbversion", true, "requested version of adb in format x.y.x"),
     DEVICE_MODEL_ID("device", true, "device id to connect"),
     CLOUD_URI("cloudurl", true, "address of cloud service");
 
