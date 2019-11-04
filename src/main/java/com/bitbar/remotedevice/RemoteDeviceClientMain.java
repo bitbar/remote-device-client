@@ -8,6 +8,7 @@ import com.bitbar.remotedevice.cli.CommandLineParameter;
 import com.bitbar.remotedevice.cli.RemoteDeviceClientCommandLineInterface;
 import com.bitbar.remotedevice.errors.PortNotFreeException;
 import com.bitbar.remotedevice.errors.RequiredParameterIsEmptyException;
+import com.bitbar.remotedevice.errors.WrongParameterException;
 import com.bitbar.remotedevice.ios.RemoteIOSDeviceSession;
 import com.bitbar.remotedevice.websocket.WebsocketManager;
 import com.testdroid.api.APIException;
@@ -53,21 +54,6 @@ public class RemoteDeviceClientMain {
 
     private static String ADB_VERSION;
 
-    static {
-        try {
-            ProcessBuilder ps = new ProcessBuilder("adb", "version");
-            Process process = ps.start();
-            String output = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8.name());
-            ADB_VERSION = new ADBVersionParser().parse(output);
-            process.waitFor();
-        } catch (IOException | InterruptedException exc) {
-            LOGGER.error("Error", exc);
-            System.exit(1);
-        } finally {
-            LOGGER.info(String.format("ADB version detected: %s", ADB_VERSION));
-        }
-    }
-
     private RemoteDeviceClientMain(CommandLine commandLine) throws RequiredParameterIsEmptyException, APIException {
         String cloudUrl = commandLine.getOptionValue(CommandLineParameter.CLOUD_URI.getArgument());
         String apiKey = commandLine.getOptionValue(CommandLineParameter.API_KEY.getArgument());
@@ -98,7 +84,7 @@ public class RemoteDeviceClientMain {
                     LOGGER.error(String.format("Unknown command: %s", command));
                     System.exit(1);
             }
-        } catch (ParseException | RequiredParameterIsEmptyException e) {
+        } catch (ParseException | RequiredParameterIsEmptyException | WrongParameterException e) {
             LOGGER.error(e.getMessage());
             usage();
         } catch (APIException e) {
@@ -143,7 +129,9 @@ public class RemoteDeviceClientMain {
     }
 
     private void connect(CommandLine commandLine)
-            throws RequiredParameterIsEmptyException, APIException {
+            throws RequiredParameterIsEmptyException, APIException, WrongParameterException {
+        ADB_VERSION = computeAdbVersion(commandLine);
+        LOGGER.info("ADB version detected: {}", ADB_VERSION);
         Long deviceModelId;
         try {
             deviceModelId = Long.parseLong(commandLine.getOptionValue(CommandLineParameter.DEVICE_MODEL_ID.getArgument()));
@@ -291,6 +279,28 @@ public class RemoteDeviceClientMain {
                 LOGGER.error("Problem occurred with API call to cloud", e);
             }
             remoteSession.stop();
+        }
+    }
+
+    private String computeAdbVersion(CommandLine commandLine) throws WrongParameterException {
+        ADBVersionParser adbVersionParser = new ADBVersionParser();
+        String adbVersion = null;
+        if (commandLine.hasOption(CommandLineParameter.ADB_VERSION.getArgument())) {
+            adbVersion = commandLine.getOptionValue(CommandLineParameter.ADB_VERSION.getArgument());
+            adbVersionParser.validate(adbVersion);
+            return adbVersion;
+        } else {
+            try {
+                ProcessBuilder ps = new ProcessBuilder("adb", "version");
+                Process process = ps.start();
+                String output = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8.name());
+                adbVersion = new ADBVersionParser().parse(output);
+                process.waitFor();
+            } catch (IOException | InterruptedException exc) {
+                LOGGER.error("Can't detect ADB version", exc);
+                System.exit(1);
+            }
+            return adbVersion;
         }
     }
 
