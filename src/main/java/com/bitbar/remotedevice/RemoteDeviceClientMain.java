@@ -52,8 +52,6 @@ public class RemoteDeviceClientMain {
 
     private static Object keyboardLock = new Object();
 
-    private static String ADB_VERSION;
-
     private RemoteDeviceClientMain(CommandLine commandLine) throws RequiredParameterIsEmptyException, APIException {
         String cloudUrl = commandLine.getOptionValue(CommandLineParameter.CLOUD_URI.getArgument());
         String apiKey = commandLine.getOptionValue(CommandLineParameter.API_KEY.getArgument());
@@ -130,8 +128,6 @@ public class RemoteDeviceClientMain {
 
     private void connect(CommandLine commandLine)
             throws RequiredParameterIsEmptyException, APIException, WrongParameterException {
-        ADB_VERSION = computeAdbVersion(commandLine);
-        LOGGER.info("ADB version detected: {}", ADB_VERSION);
         Long deviceModelId;
         try {
             deviceModelId = Long.parseLong(commandLine.getOptionValue(CommandLineParameter.DEVICE_MODEL_ID.getArgument()));
@@ -151,16 +147,18 @@ public class RemoteDeviceClientMain {
         Runtime.getRuntime().addShutdownHook(new Thread(this::finishDeviceSessions));
 
         if (device.getOsType() == APIDevice.OsType.ANDROID) {
+            String adbVersion = computeAdbVersion(commandLine);
+            LOGGER.info("ADB version provided/detected: {}", adbVersion);
             try {
                 checkPortFree(PortForwardingParameters.LOCAL_PORT);
-                APIDeviceSession apiSession = apiClientManager.createDeviceSession(deviceModelId);
+                APIDeviceSession apiSession = apiClientManager.createDeviceSession(deviceModelId, adbVersion);
                 remoteDeviceSessions.put(apiSession.getId(),
                         new RemoteAndroidDeviceSession(websocketManager, apiSession));
             } catch (PortNotFreeException e) {
                 LOGGER.error(e.getMessage());
             }
         } else if (device.getOsType() == APIDevice.OsType.IOS) {
-            APIDeviceSession apiSession = apiClientManager.createDeviceSession(deviceModelId);
+            APIDeviceSession apiSession = apiClientManager.createDeviceSession(deviceModelId, null);
             remoteDeviceSessions.put(apiSession.getId(),
                     new RemoteIOSDeviceSession(websocketManager, apiSession));
         } else {
