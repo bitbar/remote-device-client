@@ -6,8 +6,6 @@ import com.testdroid.api.*;
 import com.testdroid.api.dto.Context;
 import com.testdroid.api.dto.MappingKey;
 import com.testdroid.api.filter.FilterEntry;
-import com.testdroid.api.filter.ListStringFilterEntry;
-import com.testdroid.api.filter.NumberFilterEntry;
 import com.testdroid.api.model.APICloudInfo;
 import com.testdroid.api.model.APIDevice;
 import com.testdroid.api.model.APIDeviceSession;
@@ -46,7 +44,7 @@ public class APIClientManager {
 
     public List<APIDevice> getSupportedDevices() throws APIException {
         Context<APIDevice> ctx = new Context<>(APIDevice.class);
-        ctx.getFilters().add(new ListStringFilterEntry(OS_TYPE, IN,
+        ctx.getFilters().add(new FilterEntry(OS_TYPE, IN,
                 Arrays.asList(ANDROID.getDisplayName(), IOS.getDisplayName())));
         apiClient.findDevicePropertyInLabelGroup("supported-frameworks", "remote-session").
                 ifPresent(val -> ctx.setExtraParams(
@@ -62,7 +60,7 @@ public class APIClientManager {
     public APIDevice getDevice(Long id) throws APIException {
         Context<APIDevice> ctx = new Context<>(APIDevice.class);
         List<FilterEntry> filters = ctx.getFilters();
-        filters.add(new NumberFilterEntry(ID, EQ, id));
+        filters.add(new FilterEntry(ID, EQ, id));
         APIList<APIDevice> devices = apiClient.getDevices(ctx).getEntity();
         if (devices.isEmpty()) {
             throw new APIException(String.format("Could not find device with id %d", id));

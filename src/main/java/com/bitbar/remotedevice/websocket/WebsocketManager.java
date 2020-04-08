@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import static com.bitbar.remotedevice.StaticParameters.WEBSOCKET_CONNECTIONS_TOPIC;
+import static com.bitbar.remotedevice.StaticParameters.WEBSOCKET_CONNECTIONS_TOPIC_FORMAT;
 import static com.bitbar.remotedevice.cli.CommandLineParameter.API_KEY;
 import static com.bitbar.remotedevice.cli.CommandLineParameter.CLOUD_URI;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -60,7 +60,7 @@ public class WebsocketManager {
             throws ExecutionException, InterruptedException {
         WebSocketStompClient stompClient = createStompClient();
 
-        StompSessionHandler sessionHandler = new StompSessionHandler(this, WEBSOCKET_CONNECTIONS_TOPIC,
+        StompSessionHandler sessionHandler = new StompSessionHandler(this, WEBSOCKET_CONNECTIONS_TOPIC_FORMAT,
                 deviceSession.getId());
 
         WebSocketHttpHeaders webSocketHttpHeaders = new WebSocketHttpHeaders();

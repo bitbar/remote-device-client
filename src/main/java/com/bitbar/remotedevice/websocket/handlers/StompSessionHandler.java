@@ -11,28 +11,18 @@ public class StompSessionHandler extends StompSessionHandlerAdapter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StompSessionHandler.class);
 
-    private static final String DEVICE_SESSION_SELECTOR_FORMAT = "deviceSessionId = %d";
-
-    private static final String SELECTOR_HEADER_NAME = "selector";
-
     private String connectionTopic;
-
-    private Long deviceSessionId;
 
     private WebsocketManager websocketManager;
 
-    public StompSessionHandler(WebsocketManager websocketManager, String connectionTopic, Long deviceSessionId) {
-        this.connectionTopic = connectionTopic;
-        this.deviceSessionId = deviceSessionId;
+    public StompSessionHandler(WebsocketManager websocketManager, String connectionTopicFormat, Long deviceSessionId) {
+        this.connectionTopic = String.format(connectionTopicFormat, deviceSessionId);
         this.websocketManager = websocketManager;
     }
 
     @Override
     public void afterConnected(StompSession session, StompHeaders headers) {
-        StompHeaders subscribeHeaders = new StompHeaders();
-        subscribeHeaders.setDestination(connectionTopic);
-        subscribeHeaders.set(SELECTOR_HEADER_NAME, String.format(DEVICE_SESSION_SELECTOR_FORMAT, deviceSessionId));
-        session.subscribe(subscribeHeaders, new DeviceSessionStompFrameHandler(websocketManager));
+        session.subscribe(connectionTopic, new DeviceSessionStompFrameHandler(websocketManager));
     }
 
     /**
