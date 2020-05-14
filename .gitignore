@@ -4,6 +4,7 @@ target/
 # IDE
 .vscode/
 .idea/
+*.iml
 !.idea/codeStyleSettings.xml
 
 # Logs
